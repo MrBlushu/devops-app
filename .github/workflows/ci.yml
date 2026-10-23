@@ -22,27 +22,34 @@ jobs:
           cache: maven
       - name: Build e test
         run: ./mvnw -B verify
+
   docker:
     needs: build-test
-    if: github.event_name != "pull_request"
-    runs-on:  ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: docker/login-actions@v4
+
+      - uses: docker/login-action@v4
         with:
           username: ${{ vars.DOCKERHUB_USARNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN}}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build docker image
         run: |
           BRANCH_TAG=$(echo "$GITHUB_REF_NAME" | tr "/" "-")
-          docker build -f Dockerfile_v2 -t "$IMAGE:$GITHUB_SHA" -t "$IMAGE:$BRANCH_TAG" .
+          docker build -f Dockerfile_v2 \
+            -t "$IMAGE:$GITHUB_SHA" \
+            -t "$IMAGE:$BRANCH_TAG" .
+
       - name: Scan Docker Scout
         uses: docker/scout-action@v1
         with:
           command: cves
-          image: ${{ env.IMAGE }}:${{github.sha}}
+          image: ${{ env.IMAGE }}:${{ github.sha }}"
           only-severities: critical
           only-fixed: true
           exit-code: true
+
       - name: Push su Docker Hub
         run: docker push --all-tags "$IMAGE"
