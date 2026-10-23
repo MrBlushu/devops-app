@@ -43,10 +43,10 @@ jobs:
             -t "$IMAGE:$BRANCH_TAG" .
 
       - name: Scan Docker Scout
-        uses: docker/scout-action@v1
+        uses: docker/scout-actions@v1
         with:
           command: cves
-          image: ${{ env.IMAGE }}:${{ github.sha }}"
+          image: "${{ env.IMAGE }}:${{ github.sha }}"
           only-severities: critical
           only-fixed: true
           exit-code: true
